@@ -1,38 +1,71 @@
 plugins {
-	id 'org.springframework.boot' version '2.3.8.RELEASE'
-	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-	id 'java'
-	id 'maven-publish'
-	id 'maven'
+    id 'org.springframework.boot' version '2.3.8.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+    id 'maven-publish'
+    id 'maven'
 }
 
 group = 'com.actuator.custom.check'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '1.8'
 
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+publishing {
+    repositories {
+        maven {
+            def releaseRepoUrl = 'http://localhost:8081/nexus/content/repositories/releases/'
+            def snapshotRepoUrl = 'http://localhost:8081/nexus/content/repositories/snapshots/'
+            url = version.endsWith('SNAPSHOT') ? snapshotRepoUrl : releaseRepoUrl
+            credentials {
+                username = repoUser
+                password = repoPassword
+            }
+        }
+    }
+    publications {
+        actuator_customcheck(MavenPublication) {
+            artifact bootJar
+        }
+    }
 }
 
 repositories {
-	mavenLocal()
-	mavenCentral()
+    mavenLocal()
+   mavenCentral()
+}
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok'
-	implementation "org.springframework.boot:spring-boot-configuration-processor"
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation('org.springframework.boot:spring-boot-starter-test') {
-		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-	}
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok'
+    implementation "org.springframework.boot:spring-boot-configuration-processor"
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
 }
 
 test {
-	useJUnitPlatform()
+    useJUnitPlatform()
+}
+
+task releaseBuild {
+
+    if("true" == project.releaseBuild) {
+        println "Release Version is : " + version.substring(0, version.indexOf("-"))
+    } else {
+        println "Not a Release build, skipping re-versioning"
+    }
+}
+
+
+
+allprojects {
+    releaseBuild
 }
